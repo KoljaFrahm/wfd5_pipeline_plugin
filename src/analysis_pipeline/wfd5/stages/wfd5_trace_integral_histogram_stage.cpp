@@ -103,7 +103,7 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
             double histMin, histMax;
 
             if (useRelativeRange_) {
-                if (!firstValueMap.contains(key))
+                if (firstValueMap.find(key) == firstValueMap.end())
                     firstValueMap[key] = ci->integralValue;
 
                 double base = firstValueMap[key];
@@ -127,3 +127,4 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
         hist->Fill(ci->integralValue);
     }
 }
+
