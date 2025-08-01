@@ -28,8 +28,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
 # ----------------------- Required Packages ------------------------
 find_package(ROOT REQUIRED COMPONENTS Core RIO)
 find_package(analysis_pipeline_core REQUIRED)
-find_package(DataProducts CONFIG REQUIRED)
-find_package(Unpackers CONFIG REQUIRED)
+find_package(DataProducts REQUIRED)
+find_package(Unpackers REQUIRED)
 include(${ROOT_USE_FILE})
 
 # ----------------------- Source Files -----------------------------
