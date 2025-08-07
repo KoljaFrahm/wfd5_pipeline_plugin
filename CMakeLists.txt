@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(wfd5_pipeline_plugin VERSION 1.0 LANGUAGES CXX)
+project(wfd5_pipeline_plugin  VERSION 1.0 LANGUAGES CXX)
 
 if(NOT DEFINED PROJECT_NAMESPACE)
   set(PROJECT_NAMESPACE analysis_pipeline)
