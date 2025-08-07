@@ -44,8 +44,11 @@ void WFD5HodoscopePositionHistogramStage::Process() {
             return;
         }
     } else {
-        auto newHist = std::make_unique<TH2D>(outputLabel_.c_str(), title_.c_str(), binsX_, xMin_, xMax_, binsY_, yMin_, yMax_);
-        newHist->SetDirectory(nullptr);
+        auto rawHist = new TH2D(outputLabel_.c_str(), title_.c_str(),
+                                binsX_, xMin_, xMax_,
+                                binsY_, yMin_, yMax_);
+        rawHist->SetDirectory(nullptr); // must be first action after construction
+        auto newHist = std::unique_ptr<TH2D>(rawHist);
 
         auto pdp = std::make_unique<PipelineDataProduct>();
         pdp->setName(outputLabel_);
