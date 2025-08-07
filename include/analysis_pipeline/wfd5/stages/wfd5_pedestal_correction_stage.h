@@ -2,6 +2,7 @@
 #define WFD5_PIPELINE_PLUGIN_STAGES_WFD5_PEDESTAL_CORRECTION_STAGE_H
 
 #include "analysis_pipeline/core/stages/base_stage.h"
+#include "data_products/wfd5/WFD5Waveform.hh"
 #include <string>
 
 class WFD5PedestalCorrectionStage : public BaseStage {

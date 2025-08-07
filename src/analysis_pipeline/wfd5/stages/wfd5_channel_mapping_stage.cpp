@@ -44,8 +44,8 @@ void WFD5ChannelMappingStage::LoadChannelMap(const std::string& path) {
         ChannelInfo info;
         info.detectorSystem = entry.value("detectorSystem", "");
         info.subdetector    = entry.value("subdetector", "");
-        info.x              = entry.value("x", -100.0);
-        info.y              = entry.value("y", -100.0);
+        info.x              = entry.value("x", 0.0);
+        info.y              = entry.value("y", 0.0);
 
         channelMap_[MakeKey(crate, amc, ch)] = info;
     }
@@ -88,11 +88,11 @@ void WFD5ChannelMappingStage::Process() {
         } else {
             wf->detectorSystem = "";
             wf->subdetector    = "";
-            wf->x = -100.0;
-            wf->y = -100.0;
+            wf->x = 0.0;
+            wf->y = 0.0;
 
             spdlog::debug("[{}] No mapping found for crate={}, amc={}, ch={}",
-                         Name(), wf->crateNum, wf->amcNum, wf->channelTag);
+                          Name(), wf->crateNum, wf->amcNum, wf->channelTag);
         }
     }
 

@@ -17,14 +17,15 @@ public:
     void Process() override;
     std::string Name() const override { return "WFD5ChannelMappingStage"; }
 
-private:
     struct ChannelInfo {
         std::string detectorSystem = "";
         std::string subdetector = "";
-        double x = -100.0;
-        double y = -100.0;
+        double x = 0.0;
+        double y = 0.0;
     };
 
+
+private:
     std::string inputLabel_;
     std::string mapFilePath_;
 

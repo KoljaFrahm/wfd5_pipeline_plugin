@@ -4,7 +4,6 @@
 #include <numeric>
 #include <algorithm>
 #include <TList.h>
-#include "data_products/wfd5/WFD5Waveform.hh"
 
 using namespace dataProducts;
 
