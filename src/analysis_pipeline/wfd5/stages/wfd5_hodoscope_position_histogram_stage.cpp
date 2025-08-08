@@ -24,8 +24,8 @@ void WFD5HodoscopePositionHistogramStage::OnInit() {
     yMinInt_ = static_cast<int>(std::round(yMinRaw));
     yMaxInt_ = static_cast<int>(std::round(yMaxRaw));
 
-    binsX_ = xMaxInt_ - xMinInt_;
-    binsY_ = yMaxInt_ - yMinInt_;
+    binsX_ = (xMaxInt_ - xMinInt_) + 1;
+    binsY_ = (yMaxInt_ - yMinInt_) + 1;
 
     if (binsX_ <= 0 || binsY_ <= 0) {
         spdlog::error("[{}] Invalid bin range: binsX={}, binsY={}, xRange=[{},{}], yRange=[{},{}]",
