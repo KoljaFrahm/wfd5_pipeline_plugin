@@ -1,3 +1,4 @@
+// wfd5_pedestal_correction_stage.cpp
 #include "analysis_pipeline/wfd5/stages/wfd5_pedestal_correction_stage.h"
 
 #include <spdlog/spdlog.h>
@@ -20,8 +21,8 @@ void WFD5PedestalCorrectionStage::OnInit() {
         method_ = PedestalMethod::First;
     } else if (methodStr == "min") {
         method_ = PedestalMethod::Min;
-    } else if (methodStr == "average_closest") {
-        method_ = PedestalMethod::AverageClosest;
+    } else if (methodStr == "average") {
+        method_ = PedestalMethod::Average;
     } else {
         spdlog::warn("[{}] Unknown pedestal_method '{}', defaulting to 'first'", Name(), methodStr);
         method_ = PedestalMethod::First;
@@ -93,7 +94,7 @@ void WFD5PedestalCorrectionStage::CorrectPedestal(WFD5Waveform& wf) {
             wf.pedestalStdev = stdevs[idx];
             break;
         }
-        case PedestalMethod::AverageClosest:
+        case PedestalMethod::Average:
             wf.pedestalLevel = 0.5 * (pedestals[0] + pedestals[1]);
             wf.pedestalStdev = 0.5 * (stdevs[0] + stdevs[1]);
             break;

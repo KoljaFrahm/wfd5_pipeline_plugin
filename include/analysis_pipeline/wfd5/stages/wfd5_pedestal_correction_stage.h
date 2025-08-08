@@ -1,3 +1,4 @@
+// wfd5_pedestal_correction_stage.h
 #ifndef WFD5_PIPELINE_PLUGIN_STAGES_WFD5_PEDESTAL_CORRECTION_STAGE_H
 #define WFD5_PIPELINE_PLUGIN_STAGES_WFD5_PEDESTAL_CORRECTION_STAGE_H
 
@@ -19,7 +20,7 @@ private:
     enum class PedestalMethod {
         First,
         Min,
-        AverageClosest
+        Average
     };
 
     std::string inputLabel_;
