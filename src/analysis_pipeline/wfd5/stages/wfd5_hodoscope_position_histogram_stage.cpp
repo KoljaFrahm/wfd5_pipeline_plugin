@@ -1,8 +1,11 @@
+// wfd5_hodoscope_position_histogram_stage.cpp
 #include "analysis_pipeline/wfd5/stages/wfd5_hodoscope_position_histogram_stage.h"
 
 #include <TH2D.h>
 #include <TObject.h>
 #include <spdlog/spdlog.h>
+#include <cmath>      // for std::round
+#include <vector>
 
 ClassImp(WFD5HodoscopePositionHistogramStage)
 
@@ -10,15 +13,36 @@ void WFD5HodoscopePositionHistogramStage::OnInit() {
     inputLabel_ = parameters_.value("input_product", "HodoscopeEvent");
     outputLabel_ = parameters_.value("product_name", "HodoscopePositionHistogram");
     title_ = parameters_.value("title", "Hodoscope Position");
-    binsX_ = parameters_.value("bins_x", 100);
-    binsY_ = parameters_.value("bins_y", 100);
-    xMin_ = parameters_.value("x_min", 0.0);
-    xMax_ = parameters_.value("x_max", 100.0);
-    yMin_ = parameters_.value("y_min", 0.0);
-    yMax_ = parameters_.value("y_max", 100.0);
+
+    double xMinRaw = parameters_.value("x_min", 0.0);
+    double xMaxRaw = parameters_.value("x_max", 100.0);
+    double yMinRaw = parameters_.value("y_min", 0.0);
+    double yMaxRaw = parameters_.value("y_max", 100.0);
+
+    xMinInt_ = static_cast<int>(std::round(xMinRaw));
+    xMaxInt_ = static_cast<int>(std::round(xMaxRaw));
+    yMinInt_ = static_cast<int>(std::round(yMinRaw));
+    yMaxInt_ = static_cast<int>(std::round(yMaxRaw));
+
+    binsX_ = xMaxInt_ - xMinInt_;
+    binsY_ = yMaxInt_ - yMinInt_;
+
+    if (binsX_ <= 0 || binsY_ <= 0) {
+        spdlog::error("[{}] Invalid bin range: binsX={}, binsY={}, xRange=[{},{}], yRange=[{},{}]",
+                      Name(), binsX_, binsY_, xMinInt_, xMaxInt_, yMinInt_, yMaxInt_);
+    }
 
     spdlog::debug("[{}] Initialized with input '{}', output '{}', binsX={}, binsY={}, xRange=[{},{}], yRange=[{},{}]",
-                  Name(), inputLabel_, outputLabel_, binsX_, binsY_, xMin_, xMax_, yMin_, yMax_);
+                  Name(), inputLabel_, outputLabel_, binsX_, binsY_, xMinInt_, xMaxInt_, yMinInt_, yMaxInt_);
+}
+
+void WFD5HodoscopePositionHistogramStage::BuildIntegerBinEdges(std::vector<double>& edges, int minVal, int maxVal) {
+    edges.clear();
+    int nEdges = (maxVal - minVal) + 1;
+    edges.reserve(nEdges + 1);
+    for (int i = 0; i <= nEdges; ++i) {
+        edges.push_back(minVal - 0.5 + i);
+    }
 }
 
 void WFD5HodoscopePositionHistogramStage::Process() {
@@ -44,10 +68,14 @@ void WFD5HodoscopePositionHistogramStage::Process() {
             return;
         }
     } else {
+        std::vector<double> xEdges, yEdges;
+        BuildIntegerBinEdges(xEdges, xMinInt_, xMaxInt_);
+        BuildIntegerBinEdges(yEdges, yMinInt_, yMaxInt_);
+
         auto rawHist = new TH2D(outputLabel_.c_str(), title_.c_str(),
-                                binsX_, xMin_, xMax_,
-                                binsY_, yMin_, yMax_);
-        rawHist->SetDirectory(nullptr); // must be first action after construction
+                                binsX_, xEdges.data(),
+                                binsY_, yEdges.data());
+        rawHist->SetDirectory(nullptr);
         auto newHist = std::unique_ptr<TH2D>(rawHist);
 
         auto pdp = std::make_unique<PipelineDataProduct>();
@@ -73,9 +101,8 @@ void WFD5HodoscopePositionHistogramStage::Process() {
 }
 
 void WFD5HodoscopePositionHistogramStage::FillHistogram(TH2D* hist, const HodoscopeEvent* evt) {
-    // Only fill if max_x and max_y are valid (optional sanity check)
     if (evt->max_integral_x < 0 || evt->max_integral_y < 0) {
-        spdlog::debug("[{}] Skipping fill: invalid max_integral_x={} or max_integral_y={}", 
+        spdlog::debug("[{}] Skipping fill: invalid max_integral_x={} or max_integral_y={}",
                       Name(), evt->max_integral_x, evt->max_integral_y);
         return;
     }
