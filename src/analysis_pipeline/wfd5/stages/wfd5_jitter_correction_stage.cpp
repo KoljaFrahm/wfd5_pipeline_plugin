@@ -49,7 +49,7 @@ bool WFD5JitterCorrectionStage::LoadPedestalFile(const std::string& filename) {
         jitterCorrections_[std::make_tuple(crate, amc, channel)] = pedestal;
     }
 
-    spdlog::info("[{}] Loaded {} pedestal entries from {}", Name(), jitterCorrections_.size(), filename);
+    spdlog::debug("[{}] Loaded {} pedestal entries from {}", Name(), jitterCorrections_.size(), filename);
     return true;
 }
 

@@ -101,7 +101,7 @@ void WFD5PedestalCorrectionStage::CorrectPedestal(WFD5Waveform& wf) {
     }
 
     for (short& sample : wf.trace) {
-        sample = static_cast<short>(sample - wf.pedestalLevel);
+        sample = static_cast<short>(std::round(static_cast<double>(sample) - wf.pedestalLevel));
     }
 }
 
