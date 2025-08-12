@@ -91,6 +91,16 @@ void WFD5PedestalCorrectionStage::CorrectPedestal(WFD5Waveform& wf) {
     }
 
     // Print sum for debugging (replace with spdlog if preferred)
+    spdlog::info("[{}] Pedestal level: {:.3f}, pedestal stddev: {:.3f}", Name(), pedestal, stdev);
+
+    std::string sample_str;
+    for (size_t i = 0; i < wf.trace.size(); ++i) {
+        sample_str += std::to_string(wf.trace[i]);
+        if (i != wf.trace.size() - 1)
+            sample_str += ", ";
+    }
+    spdlog::info("[{}] Corrected samples: [{}]", Name(), sample_str);
+
     spdlog::info("[{}] Corrected trace sum: {}", Name(), sum_samples);
 
 }
