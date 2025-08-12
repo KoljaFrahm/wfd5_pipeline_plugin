@@ -14,5 +14,6 @@
 #pragma link C++ class WFD5HodoscopePositionHistogramStage+;
 #pragma link C++ class WFD5ChannelMappingStage+;
 #pragma link C++ class WFD5PedestalCorrectionStage+;
+#pragma link C++ class WFD5JitterCorrectionStage+;
 
 #endif
