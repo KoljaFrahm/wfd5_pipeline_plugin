@@ -83,6 +83,16 @@ void WFD5PedestalCorrectionStage::CorrectPedestal(WFD5Waveform& wf) {
     for (short& sample : wf.trace) {
         sample = static_cast<short>(std::round(static_cast<double>(sample) - pedestal));
     }
+
+    // Compute sum of corrected trace samples
+    int64_t sum_samples = 0;
+    for (const auto& s : wf.trace) {
+        sum_samples += s;
+    }
+
+    // Print sum for debugging (replace with spdlog if preferred)
+    spdlog::info("[{}] Corrected trace sum: {}", Name(), sum_samples);
+
 }
 
 
