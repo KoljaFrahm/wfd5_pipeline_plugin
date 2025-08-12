@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 #include <nlohmann/json.hpp> // you must have json.hpp included and configured
 
@@ -11,17 +12,6 @@
 
 using json = nlohmann::json;
 using namespace dataProducts;
-
-// Simple hash for tuple<int,int,int> - if you want a proper hasher,
-// you can implement or use boost::hash_combine style hash
-struct ChannelKeyHash {
-    std::size_t operator()(const std::tuple<int,int,int>& key) const {
-        auto h1 = std::hash<int>{}(std::get<0>(key));
-        auto h2 = std::hash<int>{}(std::get<1>(key));
-        auto h3 = std::hash<int>{}(std::get<2>(key));
-        return h1 ^ (h2 << 1) ^ (h3 << 2);
-    }
-};
 
 WFD5JitterCorrectionStage::WFD5JitterCorrectionStage()
     : BaseStage(), jitterCorrections_()
@@ -91,7 +81,7 @@ void WFD5JitterCorrectionStage::Process() {
         auto* wf = dynamic_cast<WFD5Waveform*>(obj);
         if (!wf) continue;
 
-        auto key = std::make_tuple(wf->crateNum, wf->amcNum, wf->channelTag);
+        ChannelKey key = std::make_tuple(wf->crateNum, wf->amcNum, wf->channelTag);
 
         auto it = jitterCorrections_.find(key);
         if (it == jitterCorrections_.end()) {

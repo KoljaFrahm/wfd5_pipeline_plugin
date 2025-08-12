@@ -5,7 +5,8 @@
 #include "data_products/wfd5/WFD5Waveform.hh"
 
 #include <string>
-#include <unordered_map>
+#include <map>
+#include <tuple>
 
 class WFD5JitterCorrectionStage : public BaseStage {
 public:
@@ -19,15 +20,12 @@ public:
 
 private:
     using ChannelKey = std::tuple<int,int,int>;  // (crateNum, amcSlotNum, channelTag)
-    std::unordered_map<ChannelKey, int, 
-        std::hash<std::string>> jitterCorrections_;
+    std::map<ChannelKey, int> jitterCorrections_;  // Use std::map instead of unordered_map
 
     std::string inputLabel_;
     std::string pedestalFilePath_;
 
     bool LoadPedestalFile(const std::string& filename);
-
-    // Hash function for ChannelKey tuple to be defined or use a custom hasher
 
     ClassDefOverride(WFD5JitterCorrectionStage, 1);
 };
