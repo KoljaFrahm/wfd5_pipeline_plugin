@@ -3,16 +3,11 @@
 
 #include "analysis_pipeline/core/stages/base_stage.h"
 #include "data_products/wfd5/WFD5Waveform.hh"
+#include "data_products/wfd5/WaveformIntegral.hh"
 #include <string>
 
 class WFD5WaveformsIntegratorStage : public BaseStage {
 public:
-    enum class IntegrationMode {
-        All,
-        AboutMax,
-        AboutFixed
-    };
-
     WFD5WaveformsIntegratorStage();
     ~WFD5WaveformsIntegratorStage() override = default;
 
@@ -25,16 +20,15 @@ protected:
 private:
     std::string inputLabel_;
     std::string outputLabel_;
-    IntegrationMode mode_ = IntegrationMode::All;
-    int presamples_ = 0;
-    int integralLength_ = 0;
 
-    // NOTE: Removed const qualifier on wf pointer for these helper methods
-    double integrateAll(dataProducts::WFD5Waveform* wf) const;
-    double integrateAboutMax(dataProducts::WFD5Waveform* wf) const;
-    double integrateAboutFixed(dataProducts::WFD5Waveform* wf) const; // currently uses AboutMax
+    // Integration parameters
+    double nsigma_ = 10.0;
+    int searchMethod_ = 0;
+    std::pair<int,int> presampleConfig_ = {10, 250};
+    int seedIndex_ = -1;
+    int seededSearchWindow_ = -1;
 
-    ClassDefOverride(WFD5WaveformsIntegratorStage, 2);
+    ClassDefOverride(WFD5WaveformsIntegratorStage, 3);
 };
 
 #endif // WFD5_PIPELINE_PLUGIN_STAGES_WFD5_WAVEFORMS_INTEGRATOR_STAGE_H

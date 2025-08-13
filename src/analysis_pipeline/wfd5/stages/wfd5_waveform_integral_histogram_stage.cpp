@@ -1,4 +1,4 @@
-#include "analysis_pipeline/wfd5/stages/wfd5_trace_integral_histogram_stage.h"
+#include "analysis_pipeline/wfd5/stages/wfd5_waveform_integral_histogram_stage.h"
 
 #include <TList.h>
 #include <TH1D.h>
@@ -7,15 +7,15 @@
 #include <unordered_map>
 #include <string>
 
-#include "analysis_pipeline/wfd5/data_products/wfd5_trace_integral.h"
+#include "analysis_pipeline/wfd5/data_products/waveform_integral.h"
 
 using namespace dataProducts;
 
-ClassImp(WFD5TraceIntegralHistogramStage)
+ClassImp(WFD5WaveformIntegralHistogramStage)
 
-void WFD5TraceIntegralHistogramStage::OnInit() {
-    inputLabel_ = parameters_.value("input_product", "WFD5TraceIntegralCollection");
-    outputLabel_ = parameters_.value("product_name", "WFD5TraceIntegralHistogramCollection");
+void WFD5WaveformIntegralHistogramStage::OnInit() {
+    inputLabel_ = parameters_.value("input_product", "WaveformIntegralCollection");
+    outputLabel_ = parameters_.value("product_name", "WaveformIntegralHistogramCollection");
     titlePrefix_ = parameters_.value("title_prefix", "Integral");
     bins_ = parameters_.value("bins", 100);
 
@@ -36,7 +36,7 @@ void WFD5TraceIntegralHistogramStage::OnInit() {
     spdlog::debug("[{}] Initialized with input '{}', output '{}', bins={}", Name(), inputLabel_, outputLabel_, bins_);
 }
 
-void WFD5TraceIntegralHistogramStage::Process() {
+void WFD5WaveformIntegralHistogramStage::Process() {
     if (!getDataProductManager()->hasProduct(inputLabel_)) {
         spdlog::warn("[{}] Input '{}' not found", Name(), inputLabel_);
         return;
@@ -71,7 +71,7 @@ void WFD5TraceIntegralHistogramStage::Process() {
         pdp->addTag("WFD5");
         pdp->addTag("histogram");
         pdp->addTag("histogram_list");
-        pdp->addTag("built_by_wfd5_trace_integral_histogram");
+        pdp->addTag("built_by_wfd5_waveform_integral_histogram");
         getDataProductManager()->addOrUpdate(outputLabel_, std::move(pdp));
 
         auto outHandle = getDataProductManager()->checkoutWrite(outputLabel_);
@@ -87,19 +87,18 @@ void WFD5TraceIntegralHistogramStage::Process() {
     }
 }
 
-void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TList* inputList) {
+void WFD5WaveformIntegralHistogramStage::FillHistograms(TList* outputList, const TList* inputList) {
     std::unordered_map<std::string, double> firstValueMap;
 
     for (const TObject* obj : *inputList) {
-        auto* ci = dynamic_cast<const WFD5TraceIntegral*>(obj);
-        if (!ci) continue;
+        auto* wi = dynamic_cast<const WaveformIntegral*>(obj);
+        if (!wi) continue;
 
-        // Include detectorSystem and subdetector in histogram key for uniqueness
-        std::string key = "crate_" + std::to_string(ci->crateNum)
-                        + "_amc_" + std::to_string(ci->amcNum)
-                        + "_ch_" + std::to_string(ci->channelNum)
-                        + "_det_" + ci->detectorSystem
-                        + "_subdet_" + ci->subdetector;
+        std::string key = "crate_" + std::to_string(wi->crateNum)
+                        + "_amc_" + std::to_string(wi->amcNum)
+                        + "_ch_" + std::to_string(wi->channelTag)
+                        + "_det_" + wi->detectorSystem
+                        + "_subdet_" + wi->subdetector;
 
         TH1D* hist = dynamic_cast<TH1D*>(outputList->FindObject(key.c_str()));
         if (!hist) {
@@ -107,7 +106,7 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
 
             if (useRelativeRange_) {
                 if (firstValueMap.find(key) == firstValueMap.end())
-                    firstValueMap[key] = ci->integralValue;
+                    firstValueMap[key] = wi->integral;
 
                 double base = firstValueMap[key];
                 histMin = base + relativeMin_;
@@ -118,17 +117,17 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
                 histMax = max_;
             }
 
-            std::string histTitle = titlePrefix_ + " - Crate " + std::to_string(ci->crateNum)
-                                                  + ", AMC " + std::to_string(ci->amcNum)
-                                                  + ", Ch " + std::to_string(ci->channelNum)
-                                                  + ", Det " + ci->detectorSystem
-                                                  + ", Subdet " + ci->subdetector;
+            std::string histTitle = titlePrefix_ + " - Crate " + std::to_string(wi->crateNum)
+                                                  + ", AMC " + std::to_string(wi->amcNum)
+                                                  + ", Ch " + std::to_string(wi->channelTag)
+                                                  + ", Det " + wi->detectorSystem
+                                                  + ", Subdet " + wi->subdetector;
 
             hist = new TH1D(key.c_str(), histTitle.c_str(), bins_, histMin, histMax);
             hist->SetDirectory(nullptr);
             outputList->Add(hist);
         }
 
-        hist->Fill(ci->integralValue);
+        hist->Fill(wi->integral);
     }
 }

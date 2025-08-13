@@ -1,11 +1,8 @@
 #include "analysis_pipeline/wfd5/stages/wfd5_waveforms_integrator_stage.h"
 
-#include <numeric>
-#include <algorithm>
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <TList.h>
-
-#include "analysis_pipeline/wfd5/data_products/wfd5_trace_integral.h"
 
 using namespace dataProducts;
 
@@ -15,26 +12,27 @@ WFD5WaveformsIntegratorStage::WFD5WaveformsIntegratorStage() = default;
 
 void WFD5WaveformsIntegratorStage::OnInit() {
     inputLabel_ = parameters_.value("input_product", "WFD5WaveformCollection");
-    outputLabel_ = parameters_.value("product_name", "WFD5TraceIntegralCollection");
+    outputLabel_ = parameters_.value("product_name", "WaveformIntegralCollection");
 
-    std::string modeStr = parameters_.value("integration_mode", "all");
-    if (modeStr == "all") {
-        mode_ = IntegrationMode::All;
-    } else if (modeStr == "about_max") {
-        mode_ = IntegrationMode::AboutMax;
-    } else if (modeStr == "about_fixed") {
-        mode_ = IntegrationMode::AboutFixed;
-        spdlog::warn("[{}] AboutFixed mode not implemented, falling back to AboutMax", Name());
-    } else {
-        spdlog::error("[{}] Unknown integration_mode '{}', defaulting to All", Name(), modeStr);
-        mode_ = IntegrationMode::All;
+    nsigma_ = parameters_.value("nsigma", 10.0);
+    searchMethod_ = parameters_.value("search_method", 0);
+
+    // presample_config expected as two-element array or tuple
+    if (parameters_.contains("presample_config")) {
+        auto presamples = parameters_.get<std::vector<int>>("presample_config");
+        if (presamples.size() == 2) {
+            presampleConfig_ = {presamples[0], presamples[1]};
+        } else {
+            spdlog::warn("[{}] presample_config parameter malformed, expected 2 elements", Name());
+        }
     }
 
-    presamples_ = parameters_.value("presamples", 0);
-    integralLength_ = parameters_.value("integral_length", 0);
+    seedIndex_ = parameters_.value("seed_index", -1);
+    seededSearchWindow_ = parameters_.value("seeded_search_window", -1);
 
-    spdlog::debug("[{}] Initialized with input='{}', output='{}', mode={}, presamples={}, length={}",
-                  Name(), inputLabel_, outputLabel_, modeStr, presamples_, integralLength_);
+    spdlog::debug("[{}] Initialized with input='{}', output='{}', nsigma={}, searchMethod={}, presampleConfig=({},{}), seedIndex={}, seededSearchWindow={}",
+                  Name(), inputLabel_, outputLabel_, nsigma_, searchMethod_,
+                  presampleConfig_.first, presampleConfig_.second, seedIndex_, seededSearchWindow_);
 }
 
 void WFD5WaveformsIntegratorStage::Process() {
@@ -43,83 +41,58 @@ void WFD5WaveformsIntegratorStage::Process() {
         return;
     }
 
-    auto list = std::make_unique<TList>();
-    list->SetOwner(kTRUE);
+    auto inputHandle = getDataProductManager()->checkoutWrite(inputLabel_);
+    auto* waveformList = dynamic_cast<TList*>(inputHandle->getObject());
 
-    try {
-        // Checkout write access (non-const) instead of read access
-        auto lock = getDataProductManager()->checkoutWrite(inputLabel_);
-        auto* waveformList = dynamic_cast<TList*>(lock->getObject());
-        if (!waveformList) {
-            spdlog::error("[{}] Failed to cast input to TList", Name());
-            return;
-        }
-
-        int count = 0;
-        for (TObject* obj : *waveformList) {
-            auto* waveform = dynamic_cast<WFD5Waveform*>(obj);
-            if (!waveform) continue;
-
-            double integral = 0.0;
-            switch (mode_) {
-                case IntegrationMode::All:
-                    integral = integrateAll(waveform);
-                    break;
-                case IntegrationMode::AboutMax:
-                    integral = integrateAboutMax(waveform);
-                    break;
-                case IntegrationMode::AboutFixed:
-                    integral = integrateAboutFixed(waveform);
-                    break;
-            }
-
-            auto* ti = new WFD5TraceIntegral(
-                waveform->crateNum,
-                waveform->amcNum,
-                waveform->channelTag,
-                integral,
-                waveform->detectorSystem,
-                waveform->subdetector
-            );
-            list->Add(ti);
-            ++count;
-        }
-
-        spdlog::debug("[{}] Integrated {} waveforms", Name(), count);
-    } catch (const std::exception& e) {
-        spdlog::error("[{}] Exception while processing '{}': {}", Name(), inputLabel_, e.what());
+    if (!waveformList) {
+        spdlog::error("[{}] Input '{}' is not a TList", Name(), inputLabel_);
         return;
+    }
+
+    auto outputList = std::make_unique<TList>();
+    outputList->SetOwner(kTRUE);
+
+    int count = 0;
+    for (TObject* obj : *waveformList) {
+        auto* waveform = dynamic_cast<WFD5Waveform*>(obj);
+        if (!waveform) continue;
+
+        // Create new WaveformIntegral object
+        auto* integral = new WaveformIntegral();
+
+        // Fill metadata from waveform
+        integral->crateNum = waveform->crateNum;
+        integral->amcNum = waveform->amcNum;
+        integral->channelTag = waveform->channelTag;
+        integral->runNum = waveform->runNum;
+        integral->subRunNum = waveform->subRunNum;
+        integral->waveformIndex = waveform->waveformIndex;
+        integral->length = waveform->length;
+        integral->pedestalLevel = waveform->pedestalLevel;
+        integral->pedestalStdev = waveform->pedestalStdev;
+        integral->detectorSystem = waveform->detectorSystem;
+        integral->subdetector = waveform->subdetector;
+        integral->eventNum = waveform->eventNum;
+        integral->raw = waveform;
+
+        // Perform integration using config params
+        integral->DoIntegration(presampleConfig_, seedIndex_, seededSearchWindow_);
+        integral->search_method = searchMethod_;
+        integral->nsigma = nsigma_;
+
+        outputList->Add(integral);
+        ++count;
     }
 
     auto pdp = std::make_unique<PipelineDataProduct>();
     pdp->setName(outputLabel_);
-    pdp->setObject(std::move(list));
+    pdp->setObject(std::move(outputList));
     pdp->addTag("WFD5");
-    pdp->addTag("trace_integral");
+    pdp->addTag("waveform_integral");
     pdp->addTag("crate_amc_channel");
     pdp->addTag("integral_list");
     pdp->addTag("built_by_wfd5_waveforms_integrator");
     getDataProductManager()->addOrUpdate(outputLabel_, std::move(pdp));
-}
 
-double WFD5WaveformsIntegratorStage::integrateAll(WFD5Waveform* wf) const {
-    double sum = std::accumulate(wf->trace.begin(), wf->trace.end(), 0.0);
-    double pedestalSum = wf->pedestalLevel * wf->trace.size();
-    return sum - pedestalSum;
-}
-
-double WFD5WaveformsIntegratorStage::integrateAboutMax(WFD5Waveform* wf) const {
-    if (integralLength_ <= 0) return integrateAll(wf);
-    int peak = wf->GetPeakIndex();
-    int start = std::max(0, peak - presamples_);
-    int end = std::min<int>(wf->trace.size(), start + integralLength_);
-
-    double sum = std::accumulate(wf->trace.begin() + start, wf->trace.begin() + end, 0.0);
-    double pedestalSum = wf->pedestalLevel * (end - start);
-    return sum - pedestalSum;
-}
-
-double WFD5WaveformsIntegratorStage::integrateAboutFixed(WFD5Waveform* wf) const {
-    // Not implemented: use AboutMax
-    return integrateAboutMax(wf);
+    spdlog::debug("[{}] Integrated {} waveforms into WaveformIntegral objects", Name(), count);
 }

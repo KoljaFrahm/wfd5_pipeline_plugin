@@ -9,7 +9,7 @@
 
 // Pipeline stages (global namespace)
 #pragma link C++ class WFD5WaveformsIntegratorStage+;
-#pragma link C++ class WFD5TraceIntegralHistogramStage+;
+#pragma link C++ class WFD5WaveformIntegralHistogramStage+;
 #pragma link C++ class WFD5HodoscopeEventBuilderStage+;
 #pragma link C++ class WFD5HodoscopePositionHistogramStage+;
 #pragma link C++ class WFD5ChannelMappingStage+;
