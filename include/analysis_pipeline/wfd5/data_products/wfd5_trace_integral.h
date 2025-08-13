@@ -10,7 +10,8 @@ namespace dataProducts {
 class WFD5TraceIntegral : public TObject {
 public:
     WFD5TraceIntegral() = default;
-    WFD5TraceIntegral(int crate, int amc, uint64_t channel, double integral);
+    WFD5TraceIntegral(int crate, int amc, uint64_t channel, double integral,
+                      const std::string& detectorSystem = "", const std::string& subdetector = "");
 
     ~WFD5TraceIntegral() override = default;
 
@@ -22,7 +23,10 @@ public:
     uint64_t channelNum = 0;
     double integralValue = 0.0;
 
-    ClassDefOverride(WFD5TraceIntegral, 1);
+    std::string detectorSystem;
+    std::string subdetector;
+
+    ClassDefOverride(WFD5TraceIntegral, 2);
 };
 
 } // namespace dataProducts

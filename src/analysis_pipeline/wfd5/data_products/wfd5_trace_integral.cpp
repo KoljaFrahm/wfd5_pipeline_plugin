@@ -6,8 +6,15 @@ using namespace dataProducts;
 
 ClassImp(WFD5TraceIntegral)
 
-WFD5TraceIntegral::WFD5TraceIntegral(int crate, int amc, uint64_t channel, double integral)
-    : crateNum(crate), amcNum(amc), channelNum(channel), integralValue(integral) {}
+WFD5TraceIntegral::WFD5TraceIntegral(int crate, int amc, uint64_t channel, double integral,
+                                     const std::string& detectorSystem, const std::string& subdetector)
+    : crateNum(crate),
+      amcNum(amc),
+      channelNum(channel),
+      integralValue(integral),
+      detectorSystem(detectorSystem),
+      subdetector(subdetector)
+{}
 
 void WFD5TraceIntegral::Print(Option_t* /*option*/) const {
     std::cout << String() << std::endl;
@@ -18,6 +25,9 @@ std::string WFD5TraceIntegral::String() const {
     oss << "WFD5TraceIntegral { crate = " << crateNum
         << ", amc = " << amcNum
         << ", channel = " << channelNum
-        << ", integral = " << integralValue << " }";
+        << ", integral = " << integralValue
+        << ", detectorSystem = \"" << detectorSystem << "\""
+        << ", subdetector = \"" << subdetector << "\""
+        << " }";
     return oss.str();
 }

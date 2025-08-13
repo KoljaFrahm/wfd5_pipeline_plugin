@@ -77,7 +77,9 @@ void WFD5WaveformsIntegratorStage::Process() {
                 waveform->crateNum,
                 waveform->amcNum,
                 waveform->channelTag,
-                integral
+                integral,
+                waveform->detectorSystem,
+                waveform->subdetector
             );
             list->Add(ti);
             ++count;

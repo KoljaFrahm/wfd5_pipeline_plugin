@@ -94,9 +94,12 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
         auto* ci = dynamic_cast<const WFD5TraceIntegral*>(obj);
         if (!ci) continue;
 
+        // Include detectorSystem and subdetector in histogram key for uniqueness
         std::string key = "crate_" + std::to_string(ci->crateNum)
                         + "_amc_" + std::to_string(ci->amcNum)
-                        + "_ch_" + std::to_string(ci->channelNum);
+                        + "_ch_" + std::to_string(ci->channelNum)
+                        + "_det_" + ci->detectorSystem
+                        + "_subdet_" + ci->subdetector;
 
         TH1D* hist = dynamic_cast<TH1D*>(outputList->FindObject(key.c_str()));
         if (!hist) {
@@ -117,7 +120,9 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
 
             std::string histTitle = titlePrefix_ + " - Crate " + std::to_string(ci->crateNum)
                                                   + ", AMC " + std::to_string(ci->amcNum)
-                                                  + ", Ch " + std::to_string(ci->channelNum);
+                                                  + ", Ch " + std::to_string(ci->channelNum)
+                                                  + ", Det " + ci->detectorSystem
+                                                  + ", Subdet " + ci->subdetector;
 
             hist = new TH1D(key.c_str(), histTitle.c_str(), bins_, histMin, histMax);
             hist->SetDirectory(nullptr);
@@ -127,4 +132,3 @@ void WFD5TraceIntegralHistogramStage::FillHistograms(TList* outputList, const TL
         hist->Fill(ci->integralValue);
     }
 }
-
