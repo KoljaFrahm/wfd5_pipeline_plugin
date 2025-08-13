@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <string>
 
-#include "analysis_pipeline/wfd5/data_products/waveform_integral.h"
+#include "data_products/wfd5/WaveformIntegral.hh"
 
 using namespace dataProducts;
 
