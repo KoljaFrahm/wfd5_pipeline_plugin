@@ -47,16 +47,17 @@ void WFD5WaveformsIntegratorStage::Process() {
     list->SetOwner(kTRUE);
 
     try {
-        auto lock = getDataProductManager()->checkoutRead(inputLabel_);
-        const auto* waveformList = dynamic_cast<const TList*>(lock->getObject());
+        // Checkout write access (non-const) instead of read access
+        auto lock = getDataProductManager()->checkoutWrite(inputLabel_);
+        auto* waveformList = dynamic_cast<TList*>(lock->getObject());
         if (!waveformList) {
             spdlog::error("[{}] Failed to cast input to TList", Name());
             return;
         }
 
         int count = 0;
-        for (const TObject* obj : *waveformList) {
-            auto* waveform = dynamic_cast<const WFD5Waveform*>(obj);
+        for (TObject* obj : *waveformList) {
+            auto* waveform = dynamic_cast<WFD5Waveform*>(obj);
             if (!waveform) continue;
 
             double integral = 0.0;
@@ -99,13 +100,13 @@ void WFD5WaveformsIntegratorStage::Process() {
     getDataProductManager()->addOrUpdate(outputLabel_, std::move(pdp));
 }
 
-double WFD5WaveformsIntegratorStage::integrateAll(const WFD5Waveform* wf) const {
+double WFD5WaveformsIntegratorStage::integrateAll(WFD5Waveform* wf) const {
     double sum = std::accumulate(wf->trace.begin(), wf->trace.end(), 0.0);
     double pedestalSum = wf->pedestalLevel * wf->trace.size();
     return sum - pedestalSum;
 }
 
-double WFD5WaveformsIntegratorStage::integrateAboutMax(const WFD5Waveform* wf) const {
+double WFD5WaveformsIntegratorStage::integrateAboutMax(WFD5Waveform* wf) const {
     if (integralLength_ <= 0) return integrateAll(wf);
     int peak = wf->GetPeakIndex();
     int start = std::max(0, peak - presamples_);
@@ -116,7 +117,7 @@ double WFD5WaveformsIntegratorStage::integrateAboutMax(const WFD5Waveform* wf) c
     return sum - pedestalSum;
 }
 
-double WFD5WaveformsIntegratorStage::integrateAboutFixed(const WFD5Waveform* wf) const {
+double WFD5WaveformsIntegratorStage::integrateAboutFixed(WFD5Waveform* wf) const {
     // Not implemented: use AboutMax
     return integrateAboutMax(wf);
 }

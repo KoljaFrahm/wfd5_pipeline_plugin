@@ -29,9 +29,10 @@ private:
     int presamples_ = 0;
     int integralLength_ = 0;
 
-    double integrateAll(const dataProducts::WFD5Waveform* wf) const;
-    double integrateAboutMax(const dataProducts::WFD5Waveform* wf) const;
-    double integrateAboutFixed(const dataProducts::WFD5Waveform* wf) const; // currently uses AboutMax
+    // NOTE: Removed const qualifier on wf pointer for these helper methods
+    double integrateAll(dataProducts::WFD5Waveform* wf) const;
+    double integrateAboutMax(dataProducts::WFD5Waveform* wf) const;
+    double integrateAboutFixed(dataProducts::WFD5Waveform* wf) const; // currently uses AboutMax
 
     ClassDefOverride(WFD5WaveformsIntegratorStage, 2);
 };
