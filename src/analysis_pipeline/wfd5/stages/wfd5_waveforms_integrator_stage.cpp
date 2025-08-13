@@ -74,11 +74,11 @@ void WFD5WaveformsIntegratorStage::Process() {
         integral->subdetector = waveform->subdetector;
         integral->eventNum = waveform->eventNum;
         integral->raw = waveform;
+        integral->search_method = searchMethod_;
+        integral->nsigma = nsigma_;
 
         // Perform integration using config params
         integral->DoIntegration(presampleConfig_, seedIndex_, seededSearchWindow_);
-        integral->search_method = searchMethod_;
-        integral->nsigma = nsigma_;
 
         outputList->Add(integral);
         ++count;
