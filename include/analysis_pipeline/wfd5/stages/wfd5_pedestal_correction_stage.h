@@ -1,4 +1,3 @@
-// wfd5_pedestal_correction_stage.h
 #ifndef WFD5_PIPELINE_PLUGIN_STAGES_WFD5_PEDESTAL_CORRECTION_STAGE_H
 #define WFD5_PIPELINE_PLUGIN_STAGES_WFD5_PEDESTAL_CORRECTION_STAGE_H
 
@@ -26,6 +25,7 @@ private:
     std::string inputLabel_;
     int nsamples_ = 10;
     PedestalMethod method_ = PedestalMethod::First;
+    bool correctWaveform_ = false; // new flag
 
     void CorrectPedestal(dataProducts::WFD5Waveform& wf);
     static std::string ToLower(const std::string& s);

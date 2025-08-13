@@ -1,4 +1,3 @@
-// wfd5_pedestal_correction_stage.cpp
 #include "analysis_pipeline/wfd5/stages/wfd5_pedestal_correction_stage.h"
 
 #include <spdlog/spdlog.h>
@@ -16,6 +15,7 @@ void WFD5PedestalCorrectionStage::OnInit() {
     inputLabel_ = parameters_.value("input_product", "WFD5WaveformCollection");
     nsamples_ = parameters_.value("pedestal_nsamples", 10);
     std::string methodStr = ToLower(parameters_.value("pedestal_method", "first"));
+    correctWaveform_ = parameters_.value("correct_waveform", false); // new param
 
     if (methodStr == "first") {
         method_ = PedestalMethod::First;
@@ -28,8 +28,8 @@ void WFD5PedestalCorrectionStage::OnInit() {
         method_ = PedestalMethod::First;
     }
 
-    spdlog::debug("[{}] Initialized with input='{}', nsamples={}, method='{}'",
-                  Name(), inputLabel_, nsamples_, methodStr);
+    spdlog::debug("[{}] Initialized with input='{}', nsamples={}, method='{}', correct_waveform={}",
+                  Name(), inputLabel_, nsamples_, methodStr, correctWaveform_);
 }
 
 void WFD5PedestalCorrectionStage::Process() {
@@ -55,56 +55,56 @@ void WFD5PedestalCorrectionStage::Process() {
         ++corrected;
     }
 
-    spdlog::debug("[{}] Corrected pedestal for {} waveforms", Name(), corrected);
+    spdlog::debug("[{}] Processed {} waveforms", Name(), corrected);
 }
 
 void WFD5PedestalCorrectionStage::CorrectPedestal(WFD5Waveform& wf) {
     const std::vector<short>& trace = wf.trace;
-    if (trace.size() < static_cast<size_t>(nsamples_)) {
+    if (trace.size() < static_cast<size_t>(2 * nsamples_)) {
         spdlog::warn("[{}] Waveform too short to correct pedestal (size={})", Name(), trace.size());
         return;
     }
 
-    // Compute pedestal as average of first nsamples_ samples
-    double pedestal = std::accumulate(trace.begin(), trace.begin() + nsamples_, 0.0) / nsamples_;
+    std::vector<double> pedestals, stdevs;
+    std::vector<size_t> offsets = {0, trace.size() - static_cast<size_t>(nsamples_)};
 
-    // Optional: compute pedestal stddev for info
-    double accum = 0.0;
-    for (size_t i = 0; i < static_cast<size_t>(nsamples_); ++i) {
-        double diff = static_cast<double>(trace[i]) - pedestal;
-        accum += diff * diff;
-    }
-    double stdev = std::sqrt(accum / (nsamples_ - 1));
-
-    wf.pedestalLevel = pedestal;
-    wf.pedestalStdev = stdev;
-
-    // Subtract pedestal from all samples
-    for (short& sample : wf.trace) {
-        sample = static_cast<short>(std::round(static_cast<double>(sample) - pedestal));
+    for (size_t offset : offsets) {
+        double mean = std::accumulate(trace.begin() + offset,
+                                      trace.begin() + offset + nsamples_, 0.0) / nsamples_;
+        double accum = 0.0;
+        for (size_t i = offset; i < offset + nsamples_; ++i) {
+            double diff = static_cast<double>(trace[i]) - mean;
+            accum += diff * diff;
+        }
+        double stdev = std::sqrt(accum / (nsamples_ - 1));
+        pedestals.push_back(mean);
+        stdevs.push_back(stdev);
     }
 
-    // Compute sum of corrected trace samples
-    int64_t sum_samples = 0;
-    for (const auto& s : wf.trace) {
-        sum_samples += s;
+    switch (method_) {
+        case PedestalMethod::First:
+            wf.pedestalLevel = pedestals[0];
+            wf.pedestalStdev = stdevs[0];
+            break;
+        case PedestalMethod::Min: {
+            auto it = std::min_element(pedestals.begin(), pedestals.end());
+            size_t idx = std::distance(pedestals.begin(), it);
+            wf.pedestalLevel = *it;
+            wf.pedestalStdev = stdevs[idx];
+            break;
+        }
+        case PedestalMethod::Average:
+            wf.pedestalLevel = 0.5 * (pedestals[0] + pedestals[1]);
+            wf.pedestalStdev = 0.5 * (stdevs[0] + stdevs[1]);
+            break;
     }
 
-    // Print sum for debugging (replace with spdlog if preferred)
-    spdlog::info("[{}] Pedestal level: {:.3f}, pedestal stddev: {:.3f}", Name(), pedestal, stdev);
-
-    std::string sample_str;
-    for (size_t i = 0; i < wf.trace.size(); ++i) {
-        sample_str += std::to_string(wf.trace[i]);
-        if (i != wf.trace.size() - 1)
-            sample_str += ", ";
+    if (correctWaveform_) {
+        for (short& sample : wf.trace) {
+            sample = static_cast<short>(sample - wf.pedestalLevel);
+        }
     }
-    spdlog::info("[{}] Corrected samples: [{}]", Name(), sample_str);
-
-    spdlog::info("[{}] Corrected trace sum: {}", Name(), sum_samples);
-
 }
-
 
 std::string WFD5PedestalCorrectionStage::ToLower(const std::string& s) {
     std::string out;
