@@ -2,6 +2,7 @@
 #define WFD5_PIPELINE_PLUGIN_STAGES_WFD5_HODOSCOPE_EVENT_BUILDER_STAGE_H
 
 #include "analysis_pipeline/core/stages/base_stage.h"
+#include <string>
 
 class WFD5HodoscopeEventBuilderStage : public BaseStage {
 public:

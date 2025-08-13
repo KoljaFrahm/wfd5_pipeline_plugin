@@ -19,11 +19,11 @@ void WFD5WaveformsIntegratorStage::OnInit() {
 
     // presample_config expected as two-element array or tuple
     if (parameters_.contains("presample_config")) {
-        auto presamples = parameters_.get<std::vector<int>>("presample_config");
-        if (presamples.size() == 2) {
-            presampleConfig_ = {presamples[0], presamples[1]};
+        auto presamples = parameters_["presample_config"].get<std::vector<int>>();
+        if (presamples.size() >= 2) {
+            presampleConfig_ = std::make_pair(presamples[0], presamples[1]);
         } else {
-            spdlog::warn("[{}] presample_config parameter malformed, expected 2 elements", Name());
+            spdlog::warn("[{}] 'presample_config' does not have enough elements", Name());
         }
     }
 
