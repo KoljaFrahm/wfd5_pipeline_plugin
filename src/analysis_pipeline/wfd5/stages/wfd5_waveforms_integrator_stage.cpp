@@ -5,7 +5,6 @@
 #include <spdlog/spdlog.h>
 #include <TList.h>
 
-#include "data_products/wfd5/WFD5Waveform.hh"
 #include "analysis_pipeline/wfd5/data_products/wfd5_trace_integral.h"
 
 using namespace dataProducts;
