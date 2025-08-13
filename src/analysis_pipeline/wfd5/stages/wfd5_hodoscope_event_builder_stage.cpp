@@ -5,7 +5,7 @@
 #include <tuple>
 
 #include "data_products/wfd5/WFD5Waveform.hh"
-#include "analysis_pipeline/wfd5/data_products/waveform_integral.h"
+#include "data_products/wfd5/WaveformIntegral.hh"
 #include "analysis_pipeline/wfd5/data_products/hodoscope_event.h"
 #include <TList.h>
 
