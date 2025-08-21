@@ -85,7 +85,7 @@ void WFD5JitterCorrectionStage::Process() {
 
         auto it = jitterCorrections_.find(key);
         if (it == jitterCorrections_.end()) {
-            spdlog::warn("[{}] No jitter correction found for channel (crate={}, amc={}, chan={})",
+            spdlog::debug("[{}] No jitter correction found for channel (crate={}, amc={}, chan={})",
                          Name(), std::get<0>(key), std::get<1>(key), std::get<2>(key));
             continue;
         }
@@ -97,3 +97,4 @@ void WFD5JitterCorrectionStage::Process() {
 
     spdlog::debug("[{}] Applied jitter correction to {} waveforms", Name(), corrected);
 }
+
