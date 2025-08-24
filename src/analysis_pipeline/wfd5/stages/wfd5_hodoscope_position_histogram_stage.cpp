@@ -39,9 +39,9 @@ void WFD5HodoscopePositionHistogramStage::OnInit() {
 void WFD5HodoscopePositionHistogramStage::BuildIntegerBinEdges(std::vector<double>& edges, int minVal, int maxVal) {
     edges.clear();
     int nEdges = (maxVal - minVal) + 1;
-    edges.reserve(nEdges + 1);
+    edges.reserve(nEdges);
     for (int i = 0; i <= nEdges; ++i) {
-        edges.push_back(minVal - 0.5 + i);
+        edges.push_back(minVal + i);
     }
 }
 
