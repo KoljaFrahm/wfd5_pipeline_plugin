@@ -54,7 +54,7 @@ void WFD5HodoscopeEventBuilderStage::Process() {
         }
 
         auto evt = std::make_unique<HodoscopeEvent>();
-        evt->max_integral_x = -1e12;
+        evt->max_integral_x = 1e12;
         evt->max_integral_y = -1e12;
 
         for (const TObject* obj : *integrals) {
@@ -81,7 +81,7 @@ void WFD5HodoscopeEventBuilderStage::Process() {
             }
 
             if (isX) {
-                if (integ->integral > evt->max_integral_x) {
+                if (integ->integral < evt->max_integral_x) {
                     evt->max_integral_x = integ->integral;
                     evt->max_channel_x = integ->channelTag;
                     evt->max_amc_x = integ->amcNum;
