@@ -4,7 +4,7 @@
 #pragma link off all functions;
 
 // Data product classes (namespace dataProducts)
-#pragma link C++ class dataProducts::WFD5TraceIntegral+;
+#pragma link C++ class dataProducts::WFD5WaveformIntegralPresamples+;
 #pragma link C++ class dataProducts::HodoscopeEvent+;
 
 // Pipeline stages (global namespace)
