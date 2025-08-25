@@ -80,3 +80,5 @@ private:
 
     ClassDefOverride(WFD5WaveformIntegralHistogramStage, 1);
 };
+
+#endif
