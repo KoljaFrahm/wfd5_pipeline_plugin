@@ -12,6 +12,9 @@
  *
  * Stores up to N samples for one histogram key (crate/amc/channel).
  * Once full, mean and sigma can be computed to define histogram ranges.
+ *
+ * IMPORTANT: Overrides GetName() so that ROOT containers (e.g. TList) can find
+ *            objects by key via FindObject(key).
  */
 class WFD5WaveformIntegralPresamples : public TObject {
 public:
@@ -28,7 +31,11 @@ public:
     double Mean() const;
     double Sigma() const;
 
+    /// Return internal key string
     const TString& Key() const { return key_; }
+
+    /// ROOT lookup compatibility
+    const char* GetName() const override { return key_.Data(); }
 
     void Print(Option_t* option = "") const override;
     std::string String() const;
