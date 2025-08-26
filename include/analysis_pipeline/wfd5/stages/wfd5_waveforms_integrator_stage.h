@@ -28,7 +28,10 @@ private:
     int seedIndex_ = -1;
     int seededSearchWindow_ = -1;
 
-    ClassDefOverride(WFD5WaveformsIntegratorStage, 3);
+    // New option
+    bool useFullIntegral_ = false;
+
+    ClassDefOverride(WFD5WaveformsIntegratorStage, 4);
 };
 
 #endif // WFD5_PIPELINE_PLUGIN_STAGES_WFD5_WAVEFORMS_INTEGRATOR_STAGE_H
