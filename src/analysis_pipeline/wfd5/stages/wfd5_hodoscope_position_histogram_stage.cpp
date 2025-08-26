@@ -101,8 +101,8 @@ void WFD5HodoscopePositionHistogramStage::Process() {
 }
 
 void WFD5HodoscopePositionHistogramStage::FillHistogram(TH2D* hist, const HodoscopeEvent* evt) {
-    if (evt->max_integral_x < 0 || evt->max_integral_y > 0) {
-        spdlog::debug("[{}] Skipping fill: invalid max_integral_x={} or max_integral_y={}",
+    if (evt->max_integral_x < 5000 || evt->max_integral_y > -5000) {
+        spdlog::debug("[{}] Skipping fill: invalid max_integral_x={} or max_integral_y={}, there's probably just noise",
                       Name(), evt->max_integral_x, evt->max_integral_y);
         return;
     }
