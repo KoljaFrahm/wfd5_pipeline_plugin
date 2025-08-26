@@ -30,9 +30,15 @@ void WFD5WaveformsIntegratorStage::OnInit() {
     seedIndex_ = parameters_.value("seed_index", -1);
     seededSearchWindow_ = parameters_.value("seeded_search_window", -1);
 
-    spdlog::debug("[{}] Initialized with input='{}', output='{}', nsigma={}, searchMethod={}, presampleConfig=({},{}), seedIndex={}, seededSearchWindow={}",
-                  Name(), inputLabel_, outputLabel_, nsigma_, searchMethod_,
-                  presampleConfig_.first, presampleConfig_.second, seedIndex_, seededSearchWindow_);
+    // new param
+    useFullIntegral_ = parameters_.value("use_full_integral", false);
+
+    spdlog::debug(
+        "[{}] Initialized with input='{}', output='{}', nsigma={}, searchMethod={}, "
+        "presampleConfig=({},{}), seedIndex={}, seededSearchWindow={}, useFullIntegral={}",
+        Name(), inputLabel_, outputLabel_, nsigma_, searchMethod_,
+        presampleConfig_.first, presampleConfig_.second, seedIndex_, seededSearchWindow_,
+        useFullIntegral_);
 }
 
 void WFD5WaveformsIntegratorStage::Process() {
@@ -79,6 +85,11 @@ void WFD5WaveformsIntegratorStage::Process() {
 
         // Perform integration using config params
         integral->DoIntegration(presampleConfig_, seedIndex_, seededSearchWindow_);
+
+        // Overwrite with full integral if requested
+        if (useFullIntegral_) {
+            integral->integral = integral->fullintegral;
+        }
 
         outputList->Add(integral);
         ++count;
