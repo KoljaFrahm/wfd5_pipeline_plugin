@@ -22,11 +22,13 @@ public:
     int max_amc_x = 0;
     int max_crate_x = 0;
     double max_integral_x = 0.0;
+    double max_peak_to_peak_x = 0.0;
 
     double max_channel_y = 0.0;
     int max_amc_y = 0;
     int max_crate_y = 0;
     double max_integral_y = 0.0;
+    double max_peak_to_peak_y = 0.0;
 
 
     ClassDefOverride(HodoscopeEvent, 1)

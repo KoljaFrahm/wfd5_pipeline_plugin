@@ -56,6 +56,8 @@ void WFD5HodoscopeEventBuilderStage::Process() {
         auto evt = std::make_unique<HodoscopeEvent>();
         evt->max_integral_x = -1e12;
         evt->max_integral_y = 1e12;
+        evt->max_peak_to_peak_x = 0;
+        evt->max_peak_to_peak_y = 0;
 
         for (const TObject* obj : *integrals) {
             const auto* integ = dynamic_cast<const WaveformIntegral*>(obj);
@@ -66,6 +68,8 @@ void WFD5HodoscopeEventBuilderStage::Process() {
             if (it == waveformMap.end()) continue;
 
             const auto* wf = it->second;
+
+            double peak_to_peak = wf->PeakToPeak();
 
             if (wf->detectorSystem != targetDetectorSystem_) continue;
 
@@ -83,6 +87,13 @@ void WFD5HodoscopeEventBuilderStage::Process() {
             if (isX) {
                 if (integ->integral > evt->max_integral_x) {
                     evt->max_integral_x = integ->integral;
+                    // evt->max_channel_x = integ->channelTag;
+                    // evt->max_amc_x = integ->amcNum;
+                    // evt->max_crate_x = integ->crateNum;
+                    // evt->max_x = wf->x;
+                }
+                if (peak_to_peak > evt->max_peak_to_peak_x) {
+                    evt->max_peak_to_peak_x = peak_to_peak;
                     evt->max_channel_x = integ->channelTag;
                     evt->max_amc_x = integ->amcNum;
                     evt->max_crate_x = integ->crateNum;
@@ -91,6 +102,13 @@ void WFD5HodoscopeEventBuilderStage::Process() {
             } else {
                 if (integ->integral < evt->max_integral_y) {
                     evt->max_integral_y = integ->integral;
+                    // evt->max_channel_y = integ->channelTag;
+                    // evt->max_amc_y = integ->amcNum;
+                    // evt->max_crate_y = integ->crateNum;
+                    // evt->max_y = wf->y;
+                }
+                if(peak_to_peak > evt->max_peak_to_peak_y) {
+                    evt->max_peak_to_peak_y = peak_to_peak;
                     evt->max_channel_y = integ->channelTag;
                     evt->max_amc_y = integ->amcNum;
                     evt->max_crate_y = integ->crateNum;
